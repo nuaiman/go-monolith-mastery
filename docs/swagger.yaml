@@ -1,0 +1,768 @@
+basePath: /api
+definitions:
+  models.Post:
+    properties:
+      body:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      image_url:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  models.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      image_url:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      role:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  utils.Response:
+    properties:
+      data: {}
+      message:
+        type: string
+      request_id:
+        type: string
+      success:
+        type: boolean
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@backend.local
+    name: API Support
+  description: |-
+    REST API for posts, users, and image uploads.
+
+    Auth: JWT access token (24h) + rotating refresh token (30d).
+    Roles: user, admin, superadmin. Admin+ can moderate users.
+    All responses include a request_id for log correlation.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: Backend API
+  version: "1.0"
+paths:
+  /admin/users:
+    get:
+      parameters:
+      - description: Filter by role (user/admin/superadmin)
+        in: query
+        name: role
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: List all users
+      tags:
+      - admin
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Admin
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            email:
+              type: string
+            name:
+              type: string
+            password:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.User'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create a new admin
+      tags:
+      - super
+  /admin/users/{id}:
+    delete:
+      parameters:
+      - description: User UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete a user
+      tags:
+      - admin
+    get:
+      parameters:
+      - description: User UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get one user
+      tags:
+      - admin
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            email:
+              type: string
+            image_url:
+              type: string
+            is_active:
+              type: boolean
+            name:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Update a user
+      tags:
+      - admin
+  /admin/users/{id}/active:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Active flag
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            is_active:
+              type: boolean
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Activate or deactivate a user
+      tags:
+      - admin
+  /admin/users/{id}/role:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Role (user/admin)
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            role:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Change a user's role
+      tags:
+      - super
+  /auth/change-password:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Passwords
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            current_password:
+              type: string
+            new_password:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Change own password
+      tags:
+      - auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            email:
+              type: string
+            password:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Login with email and password
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Logout current user
+      tags:
+      - auth
+  /auth/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get current user details
+      tags:
+      - auth
+  /auth/profile:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Profile fields
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            image_url:
+              type: string
+            name:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Update own profile
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Refresh access token
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Registration
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            email:
+              type: string
+            name:
+              type: string
+            password:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.User'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Register a new user
+      tags:
+      - auth
+  /healthz:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Service health
+      tags:
+      - healthz
+  /posts:
+    get:
+      parameters:
+      - description: Page size (max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Filter by owner UUID
+        in: query
+        name: user_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Post'
+            type: array
+      summary: List posts
+      tags:
+      - posts
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Post
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            body:
+              type: string
+            image_url:
+              type: string
+            title:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Post'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create a post
+      tags:
+      - posts
+  /posts/{id}:
+    delete:
+      parameters:
+      - description: Post UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete a post
+      tags:
+      - posts
+    get:
+      parameters:
+      - description: Post UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Post'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Get one post
+      tags:
+      - posts
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Post UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            body:
+              type: string
+            image_url:
+              type: string
+            title:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Post'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Update a post
+      tags:
+      - posts
+  /uploads/post/{id}:
+    delete:
+      parameters:
+      - description: Post UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Remove post image
+      tags:
+      - uploads
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Post UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Image file (jpeg/png/webp/gif, 5MB)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Upload post image
+      tags:
+      - uploads
+  /uploads/user:
+    delete:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Remove user avatar
+      tags:
+      - uploads
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Image file (jpeg/png/webp/gif, 5MB)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Upload user avatar
+      tags:
+      - uploads
+  /users/{id}:
+    get:
+      parameters:
+      - description: User UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get a user by ID
+      tags:
+      - users
+schemes:
+- http
+- https
+securityDefinitions:
+  BearerAuth:
+    description: 'Enter: Bearer {token}'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
+tags:
+- description: Liveness probe
+  name: healthz
+- description: Authentication and session management
+  name: auth
+- description: User profiles and administrative operations
+  name: users
+- description: Post CRUD — public reads, auth-required writes
+  name: posts
+- description: Image uploads — one image per user, one per post
+  name: uploads
+- description: Admin operations (admin or superadmin)
+  name: admin
+- description: Superadmin-only operations
+  name: super

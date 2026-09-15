@@ -1,0 +1,59 @@
+# ============================================
+# SERVER CONFIG
+# ============================================
+ADDR=:8080
+ENV=development
+
+# Server Timeouts
+READ_TIMEOUT=10s
+WRITE_TIMEOUT=30s
+IDLE_TIMEOUT=1m
+SHUTDOWN_TIMEOUT=15s
+
+# ============================================
+# DATABASE
+# ============================================
+PG_URL=postgres://postgres:password@localhost:5432/backend?sslmode=disable
+
+# ============================================
+# AUTHENTICATION
+# ============================================
+JWT_KEY=change-this-in-production
+JWT_EXPIRY_HOURS=24
+REFRESH_TOKEN_AGE=720h
+
+# ============================================
+# BOOTSTRAP SUPER ADMIN
+# ============================================
+SUPER_ADMIN_EMAIL=super@backend.local
+SUPER_ADMIN_PASSWORD=SuperAdmin@12345
+SUPER_ADMIN_NAME=Super Admin
+
+# ============================================
+# RATE LIMITING
+# ============================================
+RATE_LIMIT=100
+RATE_INTERVAL=1m
+
+# ============================================
+# PROXY
+# ============================================
+# Set to true when running behind ngrok / nginx / Cloudflare
+TRUST_PROXY=false
+
+# ============================================
+# FILE PATHS
+# ============================================
+PUBLIC_DIR=./public
+BUCKET_DIR=./bucket
+
+# ============================================
+# UPLOADS
+# ============================================
+# 5 MB default
+MAX_UPLOAD_BYTES=5242880
+
+# ============================================
+# CORS
+# ============================================
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
